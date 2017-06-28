@@ -1,0 +1,46 @@
+{
+  "name": "node-api-typescript",
+  "description": "A node server written in typescript",
+  "version": "1.0.0",
+  "private": false,
+  "author": "fbaldo31",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon ./bin/www",
+    "grunt": "grunt",
+    "start": "grunt & node ./bin/www"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.3",
+    "errorhandler": "^1.4.3",
+    "express": "^4.14.0",
+    "fs": "0.0.1-security",
+    "method-override": "^2.3.6",
+    "morgan": "^1.8.2",
+    "multer": "^1.3.0",
+    "pug": "^2.0.0-beta6",
+    "q": "^1.4.1",
+    "sequelize": "^4.2.0",
+    "seriate": "^0.9.0",
+    "tedious": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/body-parser": "0.0.33",
+    "@types/cookie-parser": "^1.3.30",
+    "@types/cors": "^2.8.1",
+    "@types/errorhandler": "0.0.30",
+    "@types/method-override": "0.0.29",
+    "@types/morgan": "^1.7.32",
+    "@types/multer": "^1.3.2",
+    "@types/node": "^8.0.1",
+    "@types/sequelize": "^4.0.62",
+    "grunt": "^1.0.1",
+    "grunt-contrib-clean": "^1.1.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-ts": "^6.0.0-beta.3",
+    "nodemon": "^1.11.0",
+    "typescript": "^2.3.4"
+  }
+}
