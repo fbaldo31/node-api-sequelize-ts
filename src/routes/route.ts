@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import * as logger from 'morgan';
 
 /**
  * Constructor
@@ -70,10 +71,10 @@ export class BaseRoute {
    * @param data
    */
   public sendResponseOrError(err: any, res: any, data: [any]) {
-    if (err) { // send error.
+    if (err) {
       res.send(err);
     }
 
-    res.json(data); // return all users in JSON format
+    res.json(data);
   }
 }

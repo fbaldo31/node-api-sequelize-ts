@@ -1,10 +1,16 @@
 import { Request, Response } from 'express';
 import * as fs from 'fs';
-// const del = require('delete');
+import * as path from 'path';
+// import * as del from '';
 import * as mkdirp from 'mkdirp';               // Used for make directory
 import * as multer from 'multer';
-
+/**
+ * Common functions and constants
+ */
 export class Utils {
+    devMode: string = 'DEV';
+    prodMode: string = 'PROD';
+    logFile: any;
     imageType = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG', 'tiff', 'TIFF'];
     imageMaxSize = 4194304;
     publicImagesPath = './public/uploads/images';
@@ -12,32 +18,51 @@ export class Utils {
     upload: any;
 
     constructor() {
+        if (this.createFolder('../logs')) {
+            this.logFile = fs.createWriteStream(path.join(__dirname, '../../logs/server.log'), {flags: 'a'});
+        }
+        this.setupFileUplodStorage();
+    }
+
+    setupFileUplodStorage() {
         this.storage = multer.diskStorage({
             destination: this.getDestinationForImages,
             filename: this.checkMimeType
         });
-        this.upload = multer({storage: this.storage, fileFilter: this.filterImageBeforeUpload});
         // var upload = multer({dest: './uploads'});
+        this.upload = multer({storage: this.storage, fileFilter: this.filterImageBeforeUpload});
     }
 
     deleteFileOrFolder(trashed: any) {
-        // del([trashed], function (err, deleted) {
-        //     if (err) {
-        //         return false;
-        //     }
-        //     return true;
-        // });
+        // del([trashed], (err, deleted) => { return !err });
     };
 
+    /**
+     * Create folder for uploads
+     * @param res
+     */
     createImageFolderIfNotExist(res: any) {
-        mkdirp('./public/uploads/images', (mkdirErr: any) => {
-            if (mkdirErr) {
-                return res.end(mkdirErr.toString());
-            }
-        });
+        this.createFolder('public/uploads/images', res);
     };
-// File upload
 
+    createFolder(filePath: string, res?: any) {
+        mkdirp(path.join(__dirname, '../' + filePath), (mkdirErr: any) => {
+            if (mkdirErr) {
+                if (res) {
+                    return res.end(mkdirErr.toString());
+                }
+            }
+            return true;
+        });
+    }
+
+    /**
+     * File upload
+     * @param req
+     * @param file
+     * @param cb
+     * @returns {any}
+     */
     filterImageBeforeUpload(req: any, file: any, cb: any) {
         let ext = file.mimetype.split('/')[1];
         // First Check Mime Type
