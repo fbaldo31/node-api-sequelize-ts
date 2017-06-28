@@ -71,11 +71,10 @@ export class BaseRoute {
    * @param data
    */
   public sendResponseOrError(err: any, res: any, data: [any]) {
-    if (err) { // send error.
-      logger;
+    if (err) {
       res.send(err);
     }
 
-    res.json(data); // return all users in JSON format
+    res.json(data);
   }
 }
