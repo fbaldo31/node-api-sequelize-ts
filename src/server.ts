@@ -2,6 +2,7 @@ import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import * as logger from 'morgan';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as errorHandler from 'errorhandler';
 import * as methodOverride from 'method-override';
@@ -94,13 +95,13 @@ export class Server {
     // add static paths
     this.app.use(express.static(path.join(__dirname, 'public')));
 
-    // optional configure pug
+    // optional: configure pug
     this.app.set('views', path.join(__dirname, 'public/views'));
     this.app.set('view engine', 'pug');
 
     // mount logger
-    const logFile = {stream: this.helper.logFile};
-    this.env === this.helper.devMode ? this.app.use(logger('dev', logFile)) : this.app.use(logger('combined', logFile));
+    this.app.use(logger('common', {stream: this.helper.createLogFile()}));
+    this.app.use(logger('dev'));
 
     // mount json form parser
     this.app.use(bodyParser.json());

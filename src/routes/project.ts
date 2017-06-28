@@ -2,8 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 
 import { BaseRoute } from './route';
 import { Utils } from '../config/utils';
-
-const ProjectModel = {};
+import { Project } from '../models/index';
 /**
  * / route
  * @Route Project
@@ -12,7 +11,7 @@ const ProjectModel = {};
 export class ProjectRoute extends BaseRoute {
     private helper: Utils;
     //the User model
-    Project: any;
+    Project = Project;
     /**
      * Constructor
      *
@@ -97,13 +96,13 @@ export class ProjectRoute extends BaseRoute {
     }
     
     deleteProject(req: Request, res: Response, next?) {
-        this.Project.remove({
-            _id: req.params.project_id
-        }, (err) => {
-            if (err)
-                res.send(err);
-
-            this.getProjects(req, res);
-        });
+        // this.Project.remove({
+        //     _id: req.params.project_id
+        // }, (err) => {
+        //     if (err)
+        //         res.send(err);
+        //
+        //     this.getProjects(req, res);
+        // });
     }
 }

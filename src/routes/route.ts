@@ -51,7 +51,7 @@ export class BaseRoute {
    */
   public render(req: Request, res: Response, view: string, options?: Object) {
     //add constants
-    res.locals.BASE_URL = "/api";
+    res.locals.BASE_URL = "/i";
 
     //add scripts
     res.locals.scripts = this.scripts;

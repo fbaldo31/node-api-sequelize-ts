@@ -2,8 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 
 import { BaseRoute } from './route';
 import { Utils } from '../config/utils';
-
-const SkillModel = {};
+import { Skill } from '../models/index';
 /**
  * / route
  * @Route Skill
@@ -12,7 +11,7 @@ const SkillModel = {};
 export class SkillRoute extends BaseRoute {
     private helper: Utils;
     //the User model
-    Skill: any;
+    Skill = Skill;
     /**
      * Constructor
      *
@@ -88,13 +87,13 @@ export class SkillRoute extends BaseRoute {
     };
 
     deleteSkill(req: Request, res: Response, next?) {
-        this.Skill.remove({
-            _id: req.params.skill_id
-        }, (err) => {
-            if (err)
-                res.send(err);
-
-            this.getSkills(req, res);
-        });
+        // this.Skill.remove({
+        //     _id: req.params.skill_id
+        // }, (err) => {
+        //     if (err)
+        //         res.send(err);
+        //
+        //     this.getSkills(req, res);
+        // });
     }
 }

@@ -36,25 +36,26 @@ export class UserRoute extends BaseRoute {
         //log
         console.log('[UserRoute::create] Creating route.');
 
+        const thisRoute = new UserRoute();
         // get users
-        router.get('/users', (req: Request, res: Response, next: NextFunction) => {
-            new UserRoute().getUsers(req, res, next);
+        router.get('api/users', (req: Request, res: Response, next: NextFunction) => {
+            thisRoute.getUsers(req, res, next);
         });
         // create users
-        router.post('/users', (req: Request, res: Response, next: NextFunction) => {
-            new UserRoute().createUserAccount(req, res, next);
+        router.post('api/users', (req: Request, res: Response, next: NextFunction) => {
+            thisRoute.createUserAccount(req, res, next);
         });
         // Update users
-        router.put('/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
-            new UserRoute().updateUser(req, res, next);
+        router.put('api/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
+            thisRoute.updateUser(req, res, next);
         });
         // delete user
-        router.delete('/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
-            new UserRoute().deleteUser(req, res, next);
+        router.delete('api/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
+            thisRoute.deleteUser(req, res, next);
         });
         // avatar upload
-        router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
-            new UserRoute().uploadImage(req, res, next);
+        router.post('api/upload', (req: Request, res: Response, next: NextFunction) => {
+            thisRoute.uploadImage(req, res, next);
         });
     }
 
@@ -70,7 +71,7 @@ export class UserRoute extends BaseRoute {
             userName: req.body.userName,
             password: req.body.secret,
             avatar: req.body.avatar,
-            skills: req.body.skills,
+            // skills: req.body.skills,
             startdate: req.body.start,
             endDate: req.body.end,
             createdAt: new Date(),

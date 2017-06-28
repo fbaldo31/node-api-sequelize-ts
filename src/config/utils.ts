@@ -18,19 +18,27 @@ export class Utils {
     upload: any;
 
     constructor() {
-        if (this.createFolder('../logs')) {
-            this.logFile = fs.createWriteStream(path.join(__dirname, '../../logs/server.log'), {flags: 'a'});
-        }
-        this.setupFileUplodStorage();
+        this.setupFileUploadStorage();
     }
 
-    setupFileUplodStorage() {
+    setupFileUploadStorage() {
         this.storage = multer.diskStorage({
             destination: this.getDestinationForImages,
             filename: this.checkMimeType
         });
         // var upload = multer({dest: './uploads'});
         this.upload = multer({storage: this.storage, fileFilter: this.filterImageBeforeUpload});
+    }
+
+    createLogFile() {
+        try {
+            this.createFolder('../logs');
+            this.createFile('../logs/server.log');
+            console.log('start logging');
+            return this.logFile = fs.createWriteStream(path.join(__dirname, '../../logs/server.log'), {flags: 'w'});
+        } catch (ex) {
+            console.log(ex);
+        }
     }
 
     deleteFileOrFolder(trashed: any) {
@@ -46,13 +54,29 @@ export class Utils {
     };
 
     createFolder(filePath: string, res?: any) {
-        mkdirp(path.join(__dirname, '../' + filePath), (mkdirErr: any) => {
+        return mkdirp(path.join(__dirname, '../' + filePath), (mkdirErr: any) => {
             if (mkdirErr) {
                 if (res) {
                     return res.end(mkdirErr.toString());
                 }
             }
             return true;
+        });
+    }
+
+    createFile(name: string, content?: string) {
+        let file = path.join(__dirname, '/../' + name);
+        fs.open(file, 'wx', (err, fd) => {
+            if (err) {
+                console.log(err);
+            }
+
+            fs.writeFile(file, content ? content : '', (err, fd) => {
+                if (err) {
+                    console.log(err);
+                }
+                return true;
+            });
         });
     }
 
