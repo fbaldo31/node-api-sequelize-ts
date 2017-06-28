@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import * as logger from 'morgan';
 
 /**
  * Constructor
@@ -71,6 +72,7 @@ export class BaseRoute {
    */
   public sendResponseOrError(err: any, res: any, data: [any]) {
     if (err) { // send error.
+      logger;
       res.send(err);
     }
 

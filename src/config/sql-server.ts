@@ -67,10 +67,9 @@ class DbConnection {
     }
 
     public static createTables() {
-        console.log('Create table user');
         User.sync({force: false}) // Use true to delete table before
             .then(
-                () => console.log('User table created successfully'),
+                () => console.log('User table found'),
                 error => console.error(error)
             );
     }

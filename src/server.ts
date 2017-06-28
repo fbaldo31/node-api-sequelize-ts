@@ -12,6 +12,7 @@ import { UserRoute } from './routes/user';
 import { SkillRoute } from './routes/skill';
 import { ProjectRoute } from './routes/project';
 import { IndexRoute } from './routes/index';
+import { Utils } from './config/utils';
 
 /**
  * The server.
@@ -21,6 +22,7 @@ import { IndexRoute } from './routes/index';
 export class Server {
 
   public app: express.Application;
+  public env: string;
 
   private sql: DbConnection;
 
@@ -33,7 +35,7 @@ export class Server {
    * @return {ng.auto.IInjectorService} Returns the newly created injector for this app.
    */
   public static bootstrap(): Server {
-    return new Server();
+    return new Server(new Utils());
   }
 
   /**
@@ -42,7 +44,13 @@ export class Server {
    * @class Server
    * @constructor
    */
-  constructor() {
+  constructor(private helper: Utils) {
+    if (process.env.npm_config_env && process.env.npm_config_env.toUpperCase() === this.helper.devMode) {
+      this.env = this.helper.devMode;
+    } else {
+      this.env = this.helper.prodMode;
+    }
+
     //create expressjs application
     this.app = express();
 
@@ -83,31 +91,32 @@ export class Server {
    * @method config
    */
   public config() {
-    //add static paths
+    // add static paths
     this.app.use(express.static(path.join(__dirname, 'public')));
 
-    //configure pug
-    this.app.set('views', path.join(__dirname, 'views'));
+    // optional configure pug
+    this.app.set('views', path.join(__dirname, 'public/views'));
     this.app.set('view engine', 'pug');
 
-    //mount logger
-    this.app.use(logger('dev'));
+    // mount logger
+    const logFile = {stream: this.helper.logFile};
+    this.env === this.helper.devMode ? this.app.use(logger('dev', logFile)) : this.app.use(logger('combined', logFile));
 
-    //mount json form parser
+    // mount json form parser
     this.app.use(bodyParser.json());
 
-    //mount query string parser
+    // mount query string parser
     this.app.use(bodyParser.urlencoded({
       extended: true
     }));
 
-    //mount cookie parker
+    // mount cookie parker
     this.app.use(cookieParser('SECRET_GOES_HERE'));
 
-    //mount override?
+    // mount override?
     this.app.use(methodOverride());
 
-    //use q promises
+    // use q promises
     global.Promise = require('q').Promise;
 
 
