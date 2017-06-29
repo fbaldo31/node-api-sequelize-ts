@@ -5,8 +5,8 @@ import { NextFunction, Request, Response, Router } from 'express';
 
 import { BaseRoute } from './route';
 import { Utils } from '../config/utils';
+import { User } from '../models/user';
 
-const UserModel = {};
 /**
  * / route
  * @Route User
@@ -15,7 +15,7 @@ const UserModel = {};
 export class UserRoute extends BaseRoute {
     private helper: Utils;
     //the User model
-    User: any;
+    User = User;
     /**
      * Constructor
      *
@@ -38,23 +38,23 @@ export class UserRoute extends BaseRoute {
 
         const thisRoute = new UserRoute();
         // get users
-        router.get('api/users', (req: Request, res: Response, next: NextFunction) => {
+        router.get('/api/users', (req: Request, res: Response, next: NextFunction) => {
             thisRoute.getUsers(req, res, next);
         });
         // create users
-        router.post('api/users', (req: Request, res: Response, next: NextFunction) => {
+        router.post('/api/users', (req: Request, res: Response, next: NextFunction) => {
             thisRoute.createUserAccount(req, res, next);
         });
         // Update users
-        router.put('api/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
+        router.put('/api/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
             thisRoute.updateUser(req, res, next);
         });
         // delete user
-        router.delete('api/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
+        router.delete('/api/users/:user_id', (req: Request, res: Response, next: NextFunction) => {
             thisRoute.deleteUser(req, res, next);
         });
         // avatar upload
-        router.post('api/upload', (req: Request, res: Response, next: NextFunction) => {
+        router.post('/api/upload', (req: Request, res: Response, next: NextFunction) => {
             thisRoute.uploadImage(req, res, next);
         });
     }
@@ -91,14 +91,14 @@ export class UserRoute extends BaseRoute {
     }
 
     deleteUser(req: Request, res: Response, next?) {
-        this.User.remove({
-            _id: req.params.user_id
-        }, (err: any) => {
-            if (err)
-                res.send(err);
-
-            this.getUsers(req, res);
-        });
+        // this.User.remove({
+        //     _id: req.params.user_id
+        // }, (err: any) => {
+        //     if (err)
+        //         res.send(err);
+        //
+        //     this.getUsers(req, res);
+        // });
     }
 
     uploadImage(req: any, res: Response, next?) {

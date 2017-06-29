@@ -2,7 +2,6 @@ import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import * as logger from 'morgan';
-import * as http from 'http';
 import * as path from 'path';
 import * as errorHandler from 'errorhandler';
 import * as methodOverride from 'method-override';
@@ -14,7 +13,6 @@ import { SkillRoute } from './routes/skill';
 import { ProjectRoute } from './routes/project';
 import { IndexRoute } from './routes/index';
 import { Utils } from './config/utils';
-import { AgentOptions } from './config/agent.options';
 import { AgentParams } from './config/agent.params';
 
 /**
@@ -28,7 +26,6 @@ export class Server {
   public env: string;
 
   private sql: DbConnection;
-  private agentOptions = AgentOptions;
   private agent = AgentParams;
 
   /**
@@ -138,18 +135,7 @@ export class Server {
     this.app.use(cors());
 
     // Keep alive
-    const req = http.request(AgentOptions, res => {
-      console.log('STATUS: ' + res.statusCode);
-      console.log('HEADERS: ' + JSON.stringify(res.headers));
-      res.setEncoding('utf8');
-      // res.on('data', function (chunk) {
-      //   console.log('BODY: ' + chunk);
-      // });
-    });
-    req.on('error', e => {
-      console.log('problem with request: ' + e.message);
-    });
-    req.end();
+    const req = this.helper.launchKeepAliveAgent();
 
     setTimeout(() => {
       if (this.agent.statusChanged) {
@@ -182,10 +168,6 @@ export class Server {
 
     //use router middleware
     this.app.use(router);
-  }
-
-  public getConnection() {
-    return this.sql;
   }
 
 }
