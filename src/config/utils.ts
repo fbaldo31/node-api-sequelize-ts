@@ -1,11 +1,16 @@
 import { Request, Response } from 'express';
+import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
-// import * as del from '';
+import * as del from 'del';
 import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
+
+import { CronJobs } from './cron.jobs';
+import { AgentOptions } from './agent.options';
 /**
  * Common functions and constants
+ * Cron tasks are launched from the constructor
  */
 export class Utils {
     devMode: string = 'DEV';
@@ -16,9 +21,11 @@ export class Utils {
     publicImagesPath = './public/uploads/images';
     storage: any;
     upload: any;
+    cron = new CronJobs();
 
     constructor() {
         this.setupFileUploadStorage();
+        this.cron.registerAllJobs();
     }
 
     /**
@@ -49,8 +56,28 @@ export class Utils {
         }
     }
 
+    launchKeepAliveAgent() {
+        return http.request(AgentOptions, res => {
+            console.log('STATUS: ' + res.statusCode);
+            console.log('HEADERS: ' + JSON.stringify(res.headers));
+            res.setEncoding('utf8');
+            // res.on('data', function (chunk) {
+            //   console.log('BODY: ' + chunk);
+            // });
+        }).on('error', e => {
+            console.log('problem with request: ' + e.message);
+        }).end();
+    }
+
+    /**
+     * Used for delete file or folder
+     * @param trashed string: full path from /src
+     * @Return boolean
+     */
     deleteFileOrFolder(trashed: any) {
-        // del([trashed], (err, deleted) => { return !err });
+        let toDelete = [];
+        toDelete.push(path.join(__dirname, '../' + trashed));
+        del(toDelete, (err, deleted) => { return !err });
     };
 
     /**

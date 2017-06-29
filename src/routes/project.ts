@@ -33,23 +33,23 @@ export class ProjectRoute extends BaseRoute {
         console.log('[ProjectRoute::create] Creating route.');
 
         // Get Projects
-        router.get('/projects', (req: Request, res: Response, next?) => {
+        router.get('/api/projects', (req: Request, res: Response, next?) => {
             new ProjectRoute().getProjects(req, res);
         });
 
         // Create a Project and send back all project after.
-        router.post('/projects', (req: Request, res: Response, next?) => {
+        router.post('/api/projects', (req: Request, res: Response, next?) => {
             console.log('save project', req.body);
             new ProjectRoute().createProject(req, res);
         });
 
         // Update users
-        router.put('/projects/:project_id', (req: Request, res: Response, next: NextFunction) => {
+        router.put('/api/projects/:project_id', (req: Request, res: Response, next: NextFunction) => {
             new ProjectRoute().updateProject(req, res, next);
         });
 
         // delete a Project
-        router.delete('/projects/:project_id', (req: Request, res: Response, next?) => {
+        router.delete('/api/projects/:project_id', (req: Request, res: Response, next?) => {
             console.log('removing', req.params);
             new ProjectRoute().deleteProject(req, res);
         });
