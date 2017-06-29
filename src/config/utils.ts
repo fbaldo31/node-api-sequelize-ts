@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 // import * as del from '';
-import * as mkdirp from 'mkdirp';               // Used for make directory
+import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
 /**
  * Common functions and constants
@@ -21,7 +21,11 @@ export class Utils {
         this.setupFileUploadStorage();
     }
 
+    /**
+     * Use one storage and upload by folder/type
+     */
     setupFileUploadStorage() {
+        // Images
         this.storage = multer.diskStorage({
             destination: this.getDestinationForImages,
             filename: this.checkMimeType
@@ -30,6 +34,10 @@ export class Utils {
         this.upload = multer({storage: this.storage, fileFilter: this.filterImageBeforeUpload});
     }
 
+    /**
+     * Create the log file if not exists before start the stream
+     * @returns {WriteStream}
+     */
     createLogFile() {
         try {
             this.createFolder('../logs');
