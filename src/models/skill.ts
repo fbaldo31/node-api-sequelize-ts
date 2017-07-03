@@ -1,18 +1,21 @@
-import * as Sequelize from 'sequelize';
+import * as Sequelize from "sequelize";
+import { DataTypes, SequelizeStatic } from "sequelize";
 
 import { SqlParams } from '../config/sql-params';
 /**
  * Created by Frederick BALDO on 27/06/2017.
  */
 const sql = new Sequelize(SqlParams.dbName, SqlParams.user, SqlParams.pass, SqlParams.config);
-export const Skill = sql.define('skill', {
-    name: {
-        type: Sequelize.STRING
-    },
-    createdAt: {
-        type: Sequelize.DATE
-    },
-    deletedAt: {
-        type: Sequelize.DATE
-    }
-});
+
+export default function Project(sequelize: SequelizeStatic, dataTypes: DataTypes): Sequelize.Model<any, any> {
+    return sql.define<any, any>('skill', {
+        id: {type: dataTypes.INTEGER, allowNull: false, primaryKey: true},
+        name: {type: dataTypes.STRING, allowNull: false, primaryKey: true},
+        createdAt: {type: dataTypes.DATE},
+        deletedAt: {type: dataTypes.DATE},
+    }, {
+        indexes: [],
+        classMethods: {},
+        timestamps: false
+    });
+}

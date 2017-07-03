@@ -5,14 +5,19 @@ import * as path from 'path';
 import * as del from 'del';
 import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
+import * as os from 'os';
+import * as cluster from 'cluster';
+import { Worker } from "cluster";
 
 import { CronJobs } from './cron.jobs';
 import { AgentOptions } from './agent.options';
+import { logger } from "../services/logger.service";
+import { ServerAddress } from './server.config';
 /**
  * Common functions and constants
  * Cron tasks are launched from the constructor
  */
-export class Utils {
+class Utils {
     devMode: string = 'DEV';
     prodMode: string = 'PROD';
     logFile: any;
@@ -67,6 +72,24 @@ export class Utils {
         }).on('error', e => {
             console.log('problem with request: ' + e.message);
         }).end();
+    }
+
+    createServerClusters() {
+        for (let c = 0; c < os.cpus().length; c++) {
+            cluster.fork();
+        }
+
+        for (const id in cluster.workers) {
+            cluster.workers[id].on('message', logger.info);
+        }
+
+        cluster.on("exit", (worker: Worker, code: number, signal: string) => {
+            logger.info(`Worker ${worker.process.pid} died.`);
+        });
+
+        cluster.on("listening", (worker: Worker, address: ServerAddress) => {
+            logger.info(`Worker ${worker.process.pid} connected to port ${address.port}.`);
+        });
     }
 
     /**
@@ -165,3 +188,5 @@ export class Utils {
         return fs.readdirSync(__dirname + '/../' + folderName);
     }
 }
+
+export const utils = new Utils();

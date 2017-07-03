@@ -7,12 +7,12 @@ import * as errorHandler from 'errorhandler';
 import * as methodOverride from 'method-override';
 import * as cors from 'cors';
 
-import { DbConnection } from './config/sql-server';
-import { UserRoute } from './routes/user';
-import { SkillRoute } from './routes/skill';
-import { ProjectRoute } from './routes/project';
+import { dbManager } from './services';
+import { UserRoute } from './routes/user.route';
+import { SkillRoute } from './routes/skill.route';
+import { ProjectRoute } from './routes/project.route';
 import { IndexRoute } from './routes/index';
-import { Utils } from './config/utils';
+import { utils } from './config/utils';
 import { AgentParams } from './config/agent.params';
 
 /**
@@ -25,8 +25,9 @@ export class Server {
   public app: express.Application;
   public env: string;
 
-  private sql: DbConnection;
+  private sql = dbManager.getOrm();
   private agent = AgentParams;
+  private helper = utils;
 
   /**
    * Bootstrap the application.
@@ -37,7 +38,7 @@ export class Server {
    * @return {ng.auto.IInjectorService} Returns the newly created injector for this app.
    */
   public static bootstrap(): Server {
-    return new Server(new Utils());
+    return new Server();
   }
 
   /**
@@ -46,7 +47,7 @@ export class Server {
    * @class Server
    * @constructor
    */
-  constructor(private helper: Utils) {
+  constructor() {
     if (process.env.npm_config_env && process.env.npm_config_env.toUpperCase() === this.helper.devMode) {
       this.env = this.helper.devMode;
     } else {
@@ -57,7 +58,6 @@ export class Server {
     this.app = express();
 
     // DB connection
-    this.sql = new DbConnection();
     this.connect();
 
     // configure application
@@ -80,10 +80,12 @@ export class Server {
     //empty for now
   }
 
+  /**
+   * Connect to database, create the tables...
+   */
   public connect() {
-    this.sql.authenticate().then(
-        DbConnection.createTables()
-    );
+    dbManager.connect();
+    dbManager.init();
   }
 
   /**

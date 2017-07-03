@@ -4,7 +4,7 @@
 import * as cron from 'cron';
 import * as moment from 'moment';
 
-import { Utils } from './utils';
+import { utils } from './utils';
 
 const CronJob = cron.CronJob;
 
@@ -23,10 +23,10 @@ export class CronJobs {
 
     deleteOldLogsFiles() {
         new CronJob(this.allSundaysAtMidnight, () => {
-            let logFiles = new Utils().getFilesNameInFolder('../logs');
+            let logFiles = utils.getFilesNameInFolder('../logs');
             logFiles.forEach((file) => {
                 if (file === 'server.log') {
-                    new Utils().deleteFileOrFolder(file);
+                    utils.deleteFileOrFolder(file);
                     console.log('Cron Task:', 'deleteOldLogsFiles ' + file);
                 }
             });

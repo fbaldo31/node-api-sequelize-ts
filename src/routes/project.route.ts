@@ -1,17 +1,14 @@
 import { NextFunction, Request, Response, Router } from 'express';
 
-import { BaseRoute } from './route';
-import { Utils } from '../config/utils';
-import { Project } from '../models/index';
+import { BaseRoute } from './base.route';
+import { ProjectService } from '../services/project.service';
 /**
  * / route
  * @Route Project
  * @class ProjectRoute
  */
 export class ProjectRoute extends BaseRoute {
-    private helper: Utils;
-    //the User model
-    Project = Project;
+    private db = ProjectService;
     /**
      * Constructor
      *
@@ -56,53 +53,50 @@ export class ProjectRoute extends BaseRoute {
     }
 
     /**
-     * Use mongoose to get all projects in the database
+     * Use ORM to get all projects in the database
      * if there is an error retrieving, send the error. nothing after res.send(err) will execute.
      * @param req
      * @param res
      * @param next
      */
     getProjects(req: Request, res?: Response, next?) {
-        this.Project.find((err: any, projects: [any]) => {
-            super.sendResponseOrError(err, res, projects);
-        });
+        return this.db.getAllProjects()
+            .then((projects: [any]) => super.sendResponseCollection(res, projects))
+            .catch(error => super.sendError(error, res));
     }
 
     /**
-     * Create a Project, information comes from AJAX request from Angular
+     * Create a Project
      * @param req
      * @param res
      * @param next
      */
     createProject(req: Request, res: Response, next?) {
-        this.Project.create(function (err, projects) {
-            this.Project.create({
-                name: req.body.name || '',
-                createdAt: new Date(),
-                deletedAt: null
-            }, (err) => {
-                if (err) {
-                    res.send(err);
-                }
+        let project = {
+            name: req.body.name || '',
+            createdAt: new Date(),
+            deletedAt: null
+        };
 
-                // get and return all the project after you create another
-                this.getProjects(req, res);
-            });
-        })
+        return this.db.create(project).then(project =>  this.getProjects(req, res)).catch(error => super.sendError(error, res));
     };
 
     updateProject(req: Request, res: Response, next?) {
-        //
+        let project = this.db.getOneById(req.params.id);
+        if (req.body.name) { project.name = req.body.name; }
+        if (req.body.email) { project.email = req.body.email; }
+        if (req.body.password) { project.password = req.body.secret; }
+        if (req.body.avatar) { project.avatar = req.body.avatar; }
+        if (req.body.projects) { project.projects = req.body.projects; }
+
+        return this.db.update(req.params.id, project)
+            .then(nbAffectedRows =>  this.getProjects(req, res))
+            .catch(error => super.sendError(error, res));
     }
-    
+
     deleteProject(req: Request, res: Response, next?) {
-        // this.Project.remove({
-        //     _id: req.params.project_id
-        // }, (err) => {
-        //     if (err)
-        //         res.send(err);
-        //
-        //     this.getProjects(req, res);
-        // });
+        return this.db.deleteOneById(req.params.id)
+            .then(project =>  this.getProjects(req, res))
+            .catch(error => super.sendError(error, res));
     }
 }

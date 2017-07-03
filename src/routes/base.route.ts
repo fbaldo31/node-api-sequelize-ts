@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import * as logger from 'morgan';
-
+// import * as logger from 'morgan';
+import { utils } from '../config/utils';
 /**
  * Constructor
  *
@@ -12,7 +12,7 @@ export class BaseRoute {
 
   private scripts: string[];
 
-
+  public helper = utils;
   /**
    * Constructor
    *
@@ -68,13 +68,25 @@ export class BaseRoute {
    * If not send the response with data.
    * @param err
    * @param res
-   * @param data
    */
-  public sendResponseOrError(err: any, res: any, data: [any]) {
+  public sendError(err: any, res: any) {
     if (err) {
       res.send(err);
+    } else {
+      res.status(500).send('Unknown server error');
     }
+  }
 
-    res.json(data);
+  /**
+   * If send the response with data.
+   * @param res
+   * @param data
+   */
+  public sendResponseCollection(res: Response, data: [any]) {
+    if (data) {
+      res.status(200).json(data);
+    } else {
+      res.status(200);
+    }
   }
 }

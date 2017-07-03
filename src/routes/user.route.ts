@@ -3,9 +3,9 @@
  */
 import { NextFunction, Request, Response, Router } from 'express';
 
-import { BaseRoute } from './route';
-import { Utils } from '../config/utils';
-import { User } from '../models/user';
+import { BaseRoute } from './base.route';
+import { UserService } from '../services';
+import User from '../models/user';
 
 /**
  * / route
@@ -13,7 +13,7 @@ import { User } from '../models/user';
  * @class UserRoute
  */
 export class UserRoute extends BaseRoute {
-    private helper: Utils;
+    private db = UserService;
     //the User model
     User = User;
     /**
@@ -33,7 +33,7 @@ export class UserRoute extends BaseRoute {
      * @static
      */
     public static create(router: Router) {
-        //log
+        // log
         console.log('[UserRoute::create] Creating route.');
 
         const thisRoute = new UserRoute();
@@ -59,46 +59,50 @@ export class UserRoute extends BaseRoute {
         });
     }
 
+    /**
+     * Get All users in database
+     * @param req
+     * @param res
+     * @param next
+     */
     getUsers(req: Request, res?: Response, next?) {
-        this.User.find((err: any, users: [any]) => {
-            super.sendResponseOrError(err, res, users);
-        });
+        return this.db.getAllUsers()
+        // return this.db.getUserAndSkills(0)
+            .then((users) => console.log(users))
+            .catch(error => super.sendError(error, res));
     }
 
     createUserAccount(req: Request, res: Response, next?) {
-        this.User.create({
+        let user = {
             name: req.body.name || '',
             userName: req.body.userName,
             password: req.body.secret,
             avatar: req.body.avatar,
             // skills: req.body.skills,
-            startdate: req.body.start,
-            endDate: req.body.end,
             createdAt: new Date(),
             deletedAt: null
-        }, (err, user) => {
-            if (err) {
-                res.send(err);
-                // this.helper.deleteFileOrFolder(['/uploads/' + req.body.avatar]);
-            }
+        };
 
-            this.getUsers(req, res);
-        });
+        return this.db.create(user).then(user =>  this.getUsers(req, res)).catch(error => super.sendError(error, res));
     }
 
     updateUser(req: Request, res: Response, next?) {
-        //
+        let user = this.db.getOneById(req.params.id);
+        if (req.body.name) { user.name = req.body.name; }
+        if (req.body.email) { user.email = req.body.email; }
+        if (req.body.password) { user.password = req.body.secret; }
+        if (req.body.avatar) { user.avatar = req.body.avatar; }
+        if (req.body.skills) { user.skills = req.body.skills; }
+
+        return this.db.update(req.params.id, user)
+            .then(nbAffectedRows =>  this.getUsers(req, res))
+            .catch(error => super.sendError(error, res));
     }
 
     deleteUser(req: Request, res: Response, next?) {
-        // this.User.remove({
-        //     _id: req.params.user_id
-        // }, (err: any) => {
-        //     if (err)
-        //         res.send(err);
-        //
-        //     this.getUsers(req, res);
-        // });
+        return this.db.deleteOneById(req.params.id)
+            .then(user =>  this.getUsers(req, res))
+            .catch(error => super.sendError(error, res));
     }
 
     uploadImage(req: any, res: Response, next?) {

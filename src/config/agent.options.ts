@@ -4,9 +4,9 @@
 import { AgentParams } from './agent.params';
 
 export const AgentOptions = {
-    host: 'cnodejs.org',
-    port: 80,
-    path: '/',
+    host: 'localhost',
+    port: 5000,
+    path: '/api/users',
     method: 'GET',
     agent: AgentParams,
 };
