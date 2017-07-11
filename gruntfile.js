@@ -44,7 +44,13 @@ module.exports = function(grunt) {
       views: {
         files: ["views/**/*.pug"],
         tasks: ["copy"]
-      }
+      },
+        options: {
+            dateFormat: function(time) {
+                grunt.log.writeln('The watch finished in ' + time + 'ms at' + (new Date()).toString());
+                grunt.log.writeln('I am now watching any change...');
+            }
+        }
     }
   });
 
@@ -56,7 +62,8 @@ module.exports = function(grunt) {
   grunt.registerTask("default", [
     "clean",
     "copy",
-    "ts"
+    "ts",
+    "watch"
   ]);
 
 };

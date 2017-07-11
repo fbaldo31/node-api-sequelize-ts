@@ -6,6 +6,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { BaseRoute } from './base.route';
 import { UserService } from '../services';
 import User from '../models/user';
+import {logger} from "../services/logger.service";
 
 /**
  * / route
@@ -68,22 +69,24 @@ export class UserRoute extends BaseRoute {
     getUsers(req: Request, res?: Response, next?) {
         return this.db.getAllUsers()
         // return this.db.getUserAndSkills(0)
-            .then((users) => console.log(users))
+            .then((users) => super.sendResponseCollection(res, users))
             .catch(error => super.sendError(error, res));
     }
 
     createUserAccount(req: Request, res: Response, next?) {
         let user = {
             name: req.body.name || '',
-            userName: req.body.userName,
+            email: req.body.email,
             password: req.body.secret,
             avatar: req.body.avatar,
             // skills: req.body.skills,
             createdAt: new Date(),
+            updatedAt: new Date(),
             deletedAt: null
         };
 
-        return this.db.create(user).then(user =>  this.getUsers(req, res)).catch(error => super.sendError(error, res));
+        return this.db.create(user)
+            .then(user => super.sendResponseCollection(res, user)).catch(error => super.sendError(error, res));
     }
 
     updateUser(req: Request, res: Response, next?) {
@@ -92,7 +95,7 @@ export class UserRoute extends BaseRoute {
         if (req.body.email) { user.email = req.body.email; }
         if (req.body.password) { user.password = req.body.secret; }
         if (req.body.avatar) { user.avatar = req.body.avatar; }
-        if (req.body.skills) { user.skills = req.body.skills; }
+        // if (req.body.skills) { user.skills = req.body.skills; }
 
         return this.db.update(req.params.id, user)
             .then(nbAffectedRows =>  this.getUsers(req, res))
@@ -107,12 +110,12 @@ export class UserRoute extends BaseRoute {
 
     uploadImage(req: any, res: Response, next?) {
         this.helper.uploadOneImage(req, res, function (uploadError) {
-            this.helper.createImageFolderIfNotExist(res);
+            this.helper.createFolderIfNotExist(res, this.helper.publicImagesPath);
             if (uploadError) {
-                console.error('error', uploadError);
+                this.logger.error('error', uploadError);
                 return res.status(500).json({message: req.uploadError, uploadError});
             } else {
-                console.log('done', req.file);
+                logger.info('uploaded', req.file);
                 return res.json(req.file);
             }
         });

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 // import * as logger from 'morgan';
 import { utils } from '../config/utils';
+import {logger} from "../services/logger.service";
 /**
  * Constructor
  *
@@ -21,7 +22,7 @@ export class BaseRoute {
    */
   constructor() {
     //initialize variables
-    this.title = "Tour of Heros";
+    console.log('Init routers');
     this.scripts = [];
   }
 
@@ -82,8 +83,9 @@ export class BaseRoute {
    * @param res
    * @param data
    */
-  public sendResponseCollection(res: Response, data: [any]) {
+  public sendResponseCollection(res: Response, data: any[]) {
     if (data) {
+      logger.info('Result:', data);
       res.status(200).json(data);
     } else {
       res.status(200);
