@@ -3,16 +3,21 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as del from 'del';
+import * as mv from 'mv';
 import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
 import * as os from 'os';
 import * as cluster from 'cluster';
+import * as fileUploader from 'formidable';
 import { Worker } from "cluster";
+import * as csvtojson from 'csvtojson';
 
 import { CronJobs } from './cron.jobs';
 import { AgentOptions } from './agent.options';
 import { logger } from "../services/logger.service";
 import { ServerAddress } from './server.config';
+
+const converter = csvtojson({ noheader: true, delimiter: 'auto' });
 /**
  * Common functions and constants
  * Cron tasks are launched from the constructor
@@ -117,12 +122,14 @@ class Utils {
     createFolderIfNotExist(res: any, folder: string) {
         logger.info('Create folder', folder);
         mkdirp(path.join(__dirname, '../' + folder), (mkdirErr: any) => {
+            if (!mkdirErr) {
+                return true;
+            }
             if (mkdirErr) {
                 if (res) {
-                    return res.end(mkdirErr.toString());
+                    return res.send(mkdirErr.toString());
                 }
             }
-            return true;
         });
     }
 
@@ -170,8 +177,8 @@ class Utils {
     };
 
     trustCsvFile(req: any, file: any, cb: any) {
-        logger.info(file);
-        let isCsv = file.mimetype.split('/')[1] === 'csv';
+        console.log('Check', file.mimetype);
+        let isCsv = file.mimetype.split('.')[1] === 'octet-stream' || file.mimetype.split('/')[1] === 'plain';
         // First Check Mime Type
         logger.info('mime check', isCsv);
         if (!isCsv) {
@@ -205,9 +212,93 @@ class Utils {
     uploadOneImage(req: Request, res: Response, cb?) {
         return this.upload.single('file');
     }
-    uploadOneCsvFile(req: Request, res: Response, cb?) {
-        // logger.info(this.uploadcsv.any('file'));
-        return this.uploadcsv.single('file');
+
+    /**
+     * Get the file name from request, then move the file into uploads
+     * @param req
+     * @param res
+     * @returns {string}
+     */
+    uploadOneFlatFile(req: Request, res: Response) {
+        let form = new fileUploader.IncomingForm();
+        return form.parse(req, (err, fields, files) => {
+            if (err) {
+                console.error(err);
+                res.json(err);
+            }
+            let fileName = req.body.filename; // files.file.path.split('\\')[files.file.path.split('\\').length -1];
+            console.log('File uploaded', fileName);
+
+            fs.rename(files.file.path, __dirname + '/../' + this.publicCsvPath + '/' + fileName, (err) => {
+                if (err) {
+                    console.error(err.message);
+                    res.json(err);
+                }
+                // Return the file name
+                return fileName;
+            });
+
+            return fileName;
+        });
+    }
+
+    getObjectFromFlatFile(file: string, req?: Request) {
+        let fileLocation: string = __dirname + '/../' + this.publicCsvPath + '/' + file;
+        // console.log('../' + this.publicCsvPath + '/' + file);
+
+        // let fileContent = converter.csv({ path: __dirname + '/../' + this.publicCsvPath + '/' + file }, (data) => {
+        //     console.log('reading file', data);
+        //     return data;
+        // });
+        // console.log('Got content:', fileContent);
+        //
+        // return fileContent;
+
+        // let fileContent = fs.readFileSync(fileLocation);
+
+        // let promise = new Promise<any>((resolve: Function, reject: Function) => {
+        //     flatFile.db({ path: fileLocation }, (data, err) => {
+        //         if (err) {
+        //             console.error(err);
+        //             reject(err);
+        //             return err;
+        //         }
+        //         console.log('got:', data);
+        //         if (req) {
+        //             req.file = data;
+        //         }
+        //         resolve(data);
+        //     }); // .then(data =>  { resolve(data); return data }).catch(error => reject(error));
+        // });
+        //
+        // return promise;
+
+        let content = [];
+        let promise = new Promise<any>((resolve: Function, reject: Function) => {
+            return converter.fromFile(fileLocation)
+                .transf((json: any, csvRow: any, index: number) => {
+                    // csvRow[2] = csvRow[2] === 'L' ? 'LLL' : csvRow[2];
+                    content.push([
+                        '\'' + csvRow[1] + '\'',
+                        '\'' + csvRow[2] + '\'',
+                        '\'' + csvRow[4] + '\'',
+                        '\'' + csvRow[5] + '\'',
+                        '\'' + csvRow[12] + '\'',
+                        '\'' + csvRow[13] + '\''
+                    ]);
+                    // console.log('got', csvRow);
+                })
+                .on('done', (error) => {
+                    if (error) {
+                        reject(error);
+                        console.error('error:', error);
+                        return error;
+                    }
+                    console.log('Got flat file content:', content[0]);
+                    resolve(content);
+                })
+            });
+        return promise;
     }
 
     /**
