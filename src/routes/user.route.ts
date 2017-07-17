@@ -90,11 +90,15 @@ export class UserRoute extends BaseRoute {
     }
 
     updateUser(req: Request, res: Response, next?) {
-        let user = this.db.getOneById(req.params.id);
+        let user = this.db.getOneById(req.params.user_id);
+        console.log(req.body);
         if (req.body.name) { user.name = req.body.name; }
+        if (req.body.firstname) { user.firstName = req.body.firstname; }
+        if (req.body.lastname) { user.lastName = req.body.lastname; }
         if (req.body.email) { user.email = req.body.email; }
-        if (req.body.password) { user.password = req.body.secret; }
+        if (req.body.password) { user.password = req.body.password; }
         if (req.body.avatar) { user.avatar = req.body.avatar; }
+        user.updatedAt = new Date();
         // if (req.body.skills) { user.skills = req.body.skills; }
 
         return this.db.update(req.params.id, user)
