@@ -14,6 +14,7 @@ import { ProjectRoute } from './routes/project.route';
 import { IndexRoute } from './routes/index';
 import { utils } from './config/utils';
 import { AgentParams } from './config/agent.params';
+import {CsvRoute} from "./routes/csv.route";
 
 /**
  * The server.
@@ -107,12 +108,10 @@ export class Server {
     this.app.use(logger('dev'));
 
     // mount json form parser
-    this.app.use(bodyParser.json());
+    this.app.use(bodyParser.json({limit: '5mb'}));
 
     // mount query string parser
-    this.app.use(bodyParser.urlencoded({
-      extended: true
-    }));
+    this.app.use(bodyParser.urlencoded({ extended: false, limit: '5mb'}));
 
     // mount cookie parker
     this.app.use(cookieParser('SECRET_GOES_HERE'));
@@ -164,6 +163,8 @@ export class Server {
     SkillRoute.create(router);
     // Project
     ProjectRoute.create(router);
+    // Csv
+    CsvRoute.create(router);
     /** Front */
     // IndexRoute
     IndexRoute.create(router);

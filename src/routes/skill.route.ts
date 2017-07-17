@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 
 import { BaseRoute } from './base.route';
-import { Skill } from '../models';
+import Skill from '../models/skill';
 import { SkillService } from '../services/skill.service';
 /**
  * / route
@@ -31,22 +31,22 @@ export class SkillRoute extends BaseRoute {
     public static create(router: Router) {
         //log
         console.log('[SkillRoute::create] Creating route.');
-
+        const thisRoute = new SkillRoute();
         // Get skills
         router.get('/api/skills', (req: Request, res: Response, next?:  NextFunction) => {
-            new SkillRoute().getSkills(req, res);
+            thisRoute.getSkills(req, res);
         });
 
         // Create a Skill and send back all skill after.
         router.post('/api/skills', (req: Request, res: Response, next?) => {
             console.log('save skill', req.body);
-            new SkillRoute().createSkill(req, res);
+            thisRoute.createSkill(req, res);
         });
 
         // delete a Skill
         router.delete('/api/skills/:skill_id', (req: Request, res: Response, next?: NextFunction) => {
             console.log('removing', req.params);
-            new SkillRoute().deleteSkill(req, res);
+            thisRoute.deleteSkill(req, res).catch(error => res.json(error));
         });
     }
 
@@ -73,10 +73,11 @@ export class SkillRoute extends BaseRoute {
         let skill = {
             name: req.body.name || '',
             createdAt: new Date(),
+            updatedAt: new Date(),
             deletedAt: null
         };
 
-        return this.db.create(skill).then(skill =>  this.getSkills(req, res)).catch(error => super.sendError(error, res));
+        return this.db.create(skill).then(skill => this.getSkills(req, res)).catch(error => super.sendError(error, res));
     };
 
     updateSkill(req: Request, res: Response, next?) {
@@ -85,7 +86,7 @@ export class SkillRoute extends BaseRoute {
         if (req.body.email) { skill.email = req.body.email; }
         if (req.body.password) { skill.password = req.body.secret; }
         if (req.body.avatar) { skill.avatar = req.body.avatar; }
-        if (req.body.skills) { skill.skills = req.body.skills; }
+        // if (req.body.skills) { skill.skills = req.body.skills; }
 
         return this.db.update(req.params.id, skill)
             .then(nbAffectedRows =>  this.getSkills(req, res))

@@ -23,9 +23,12 @@ class Utils {
     logFile: any;
     imageType = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG', 'tiff', 'TIFF'];
     imageMaxSize = 4194304;
-    publicImagesPath = './public/uploads/images';
+    publicImagesPath = '../public/uploads/images';
+    publicCsvPath = '../public/uploads/csv';
     storage: any;
     upload: any;
+    csvStorage: any;
+    uploadcsv: any;
     cron = new CronJobs();
 
     constructor() {
@@ -44,6 +47,10 @@ class Utils {
         });
         // var upload = multer({dest: './uploads'});
         this.upload = multer({storage: this.storage, fileFilter: this.filterImageBeforeUpload});
+
+        // CSV
+        this.csvStorage = multer.diskStorage({destination: this.getDestinationForCsv,});
+        this.uploadcsv = multer({storage: this.csvStorage, fileFilter: this.trustCsvFile});
     }
 
     /**
@@ -52,25 +59,25 @@ class Utils {
      */
     createLogFile() {
         try {
-            this.createFolder('../logs');
+            this.createFolderIfNotExist(null, '../logs');
             this.createFile('../logs/server.log');
-            console.log('start logging');
+            logger.info('start logging');
             return this.logFile = fs.createWriteStream(path.join(__dirname, '../../logs/server.log'), {flags: 'w'});
         } catch (ex) {
-            console.log(ex);
+            logger.info(ex);
         }
     }
 
     launchKeepAliveAgent() {
         return http.request(AgentOptions, res => {
-            console.log('STATUS: ' + res.statusCode);
-            console.log('HEADERS: ' + JSON.stringify(res.headers));
+            logger.info('STATUS: ' + res.statusCode);
+            logger.info('HEADERS: ' + JSON.stringify(res.headers));
             res.setEncoding('utf8');
             // res.on('data', function (chunk) {
-            //   console.log('BODY: ' + chunk);
+            //   logger.info('BODY: ' + chunk);
             // });
         }).on('error', e => {
-            console.log('problem with request: ' + e.message);
+            logger.info('problem with request: ' + e.message);
         }).end();
     }
 
@@ -107,12 +114,9 @@ class Utils {
      * Create folder for uploads
      * @param res
      */
-    createImageFolderIfNotExist(res: any) {
-        this.createFolder('public/uploads/images', res);
-    };
-
-    createFolder(filePath: string, res?: any) {
-        return mkdirp(path.join(__dirname, '../' + filePath), (mkdirErr: any) => {
+    createFolderIfNotExist(res: any, folder: string) {
+        logger.info('Create folder', folder);
+        mkdirp(path.join(__dirname, '../' + folder), (mkdirErr: any) => {
             if (mkdirErr) {
                 if (res) {
                     return res.end(mkdirErr.toString());
@@ -126,12 +130,12 @@ class Utils {
         let file = path.join(__dirname, '/../' + name);
         fs.open(file, 'wx', (err, fd) => {
             if (err) {
-                console.log(err);
+                logger.info(err.message);
             }
 
             fs.writeFile(file, content ? content : '', (err, fd) => {
                 if (err) {
-                    console.log(err);
+                    logger.info(err);
                 }
                 return true;
             });
@@ -148,14 +152,14 @@ class Utils {
     filterImageBeforeUpload(req: any, file: any, cb: any) {
         let ext = file.mimetype.split('/')[1];
         // First Check Mime Type
-        console.log('mime check', this.imageType.indexOf(ext) > -1);
+        logger.info('mime check', this.imageType.indexOf(ext) > -1);
         if (this.imageType.indexOf(ext) === -1) {
             cb(null, false);
             req.uploadError = 'File type is not allowed';
             return cb(new Error(req.uploadError));
         }
         // Then check file size not > 4Mo
-        console.log('size check', file.size); // < 4194304);
+        logger.info('size check', file.size); // < 4194304);
         if (file.size >= this.imageMaxSize) {
             cb(null, false);
             req.uploadError = 'File max size allowed is 4Mo';
@@ -165,6 +169,27 @@ class Utils {
         cb(null, true);
     };
 
+    trustCsvFile(req: any, file: any, cb: any) {
+        logger.info(file);
+        let isCsv = file.mimetype.split('/')[1] === 'csv';
+        // First Check Mime Type
+        logger.info('mime check', isCsv);
+        if (!isCsv) {
+            cb(null, false);
+            req.uploadError = 'File type is not allowed';
+            return cb(new Error(req.uploadError));
+        }
+        // Then check file size not > 4Mo
+        logger.info('size check', file.size); // < 4194304);
+        if (file.size >= this.imageMaxSize) {
+            cb(null, false);
+            req.uploadError = 'File max size allowed is 4Mo';
+            return cb(new Error(req.uploadError));
+        }
+        // All tests success
+        cb(null, true);
+    }
+
     checkMimeType(req: any, file: any, cb: any) {
         let ext = file.mimetype.split('/')[1];
         cb(null, file.fieldname + '-' + Date.now() + '.' + ext);
@@ -173,9 +198,16 @@ class Utils {
     getDestinationForImages(req: any, file: any, cb: any) {
         cb(null, this.publicImagesPath);
     }
+    getDestinationForCsv(req: any, file: any, cb: any) {
+        cb(null, this.publicCsvPath);
+    }
 
     uploadOneImage(req: Request, res: Response, cb?) {
         return this.upload.single('file');
+    }
+    uploadOneCsvFile(req: Request, res: Response, cb?) {
+        // logger.info(this.uploadcsv.any('file'));
+        return this.uploadcsv.single('file');
     }
 
     /**

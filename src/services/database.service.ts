@@ -32,9 +32,14 @@ class DatabaseService {
         try {
             this.sql = new SequelizeStatic(SqlParams.dbName, SqlParams.user, SqlParams.pass, SqlParams.config);
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
         return this.sql;
+    }
+
+    createMigrationDB() {
+        this.connectToThisDB('baseA');
+        this.connectToThisDB('baseB');
     }
 
     /**
@@ -47,49 +52,51 @@ class DatabaseService {
         try {
             this.sql = new SequelizeStatic(params.dbName, params.user, params.pass, params.config);
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     }
 
     init() {
-        this.sql.authenticate().then(() => {
-            this.registerModels();
-            this.createTablesIfNotExists();
-        });
+        this.sql.authenticate()
+            .then(() => { logger.info('Database connected'); })
+            .catch(error => logger.error(error.message));
+        this.registerModels('models');
     }
 
     /**
-     * Set models in ORM cache
+     * Set models in ORM cache and create the tables if not exists
+     * @param pathToFolder
      */
-    registerModels() {
-        const modelFiles =  utils.getFilesNameInFolder('models').filter((file: string) => {
+    registerModels(pathToFolder: string): void {
+        const modelFiles =  utils.getFilesNameInFolder(pathToFolder).filter((file: string) => {
             return (file !== 'index.js') && (file !== 'interfaces');
         });
 
-        modelFiles.forEach((file: string, index: number) => {
-            let model = this.sql.import(path.join('../models/', file));
-            let name = file.split('.js')[0].toUpperCase();
-            name = name.charAt(0).toUpperCase() + name.slice(1);
-            this.models[name] = model;
+        if (modelFiles.length)
+        {
+            modelFiles.forEach((file: string, index: number) =>
+            {
+                file = file.split('.js')[0];
+                let model = this.sql.import(__dirname + '/../' + pathToFolder + '/' + file);
 
-            this.makeRelations();
-            if (index === modelFiles.length -1) {
-                logger.info('got models', this.models);
-            }
-        });
+                // let name = file.split('.js')[0];
+                let name = file.charAt(0).toUpperCase() + file.slice(1);
+                this.models[name] = model;
+                this.models[name].sync({alter: true}); // force: true to drop the tables before
+
+                if (index === modelFiles.length -1) {
+                    console.log('got models', this.models);
+                    this.makeRelations();
+                }
+            });
+        }
     }
 
     /** Tables relations */
     makeRelations() {
-        if (this.models.Project) {
-            this.models.Project.hasOne(this.models.User);
+        if (this.models.Project && this.models.User) {
+            // this.models.User.hasOne(this.models.Project);
         }
-    }
-
-    createTablesIfNotExists(): void {
-        this.getOrm().sync({force: false})
-            .then(() => console.log('Database synced.'))
-            .catch((error) => console.error(error));
     }
 
     getModels() {

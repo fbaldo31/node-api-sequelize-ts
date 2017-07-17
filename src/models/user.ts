@@ -10,14 +10,16 @@ import { DataTypes, SequelizeStatic } from "sequelize";
 const sql = new Sequelize(SqlParams.dbName, SqlParams.user, SqlParams.pass, SqlParams.config);
 export default function User(sequelize: SequelizeStatic, dataTypes: DataTypes): Sequelize.Model<any, any> {
     return sql.define<any, any>('user', {
-        id: {type: dataTypes.INTEGER, allowNull: false, primaryKey: true},
-        name: {type: dataTypes.STRING, allowNull: false, primaryKey: true},
-        // description: {type: dataTypes.TEXT, allowNull: true},
+        name: {type: dataTypes.STRING, allowNull: false},
         firstName: {type: dataTypes.STRING},
         lastName: {type: dataTypes.STRING},
-        email: {type: dataTypes.STRING},
-        password: {type: dataTypes.STRING},
+        email: {type: dataTypes.STRING, allowNull: false},
+        password: {type: dataTypes.STRING, allowNull: false},
         avatar: {type: dataTypes.STRING},
+        createdAt: {type: dataTypes.DATE},
+        updatedAt: {type: dataTypes.DATE},
+        deletedAt: {type: dataTypes.DATE},
+        role: {type: dataTypes.STRING}
     }, {
         indexes: [],
         classMethods: {},
