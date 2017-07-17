@@ -3,7 +3,6 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as del from 'del';
-import * as mv from 'mv';
 import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
 import * as os from 'os';
