@@ -93,9 +93,13 @@ class DatabaseService {
         }
     }
 
+    /**
+     * Create a table from a parsed flat file. data is an array of array (rows)
+     * @param name
+     * @param data
+     */
     createTableFromFile(name: string, data: any[]) {
-        // let tableName = name.replace(/\./g, '_').split('_TXT')[0].toLowerCase();
-        let columnsNames = name.split('.'); //.splice(name.length -1);
+        let columnsNames = name.split('.');
         console.log(columnsNames);
         let tableName = columnsNames[1].toLowerCase() + columnsNames[2].toLowerCase();
             //  Let's count how many columns are in the first row
@@ -111,17 +115,16 @@ class DatabaseService {
         });
         if (createColumns !== '') {
             // First delete the table if exists
-            this.sql.query('IF ( EXISTS ( SELECT * FROM FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '+ tableName + ')) DROP TABLE ' + tableName)
-                .then((result) => console.log(result))
-                .catch((error) => console.error(error));
-            // Then create the table and inserts rows from file
-            this.sql.query('DROP TABLE ' + tableName)
-                .then(() => { // Create table
+            this.sql.query(
+                'IF ( EXISTS ( ' +
+                'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME=\''+ tableName + '\')) ' +
+                'DROP TABLE ' + tableName)
+                .then(() => {
                     this.sql.query('CREATE TABLE ' + tableName + '(' + createColumns + ');')
                         .then(() => {
                             console.log('table has been successfully created');
                             data.forEach((row: any, index: number) => {
-                                let properRow = JSON.stringify(row.splice(name.length -1)).replace('\[', '').replace('\]', '').replace("\"/", "`");
+                                // let properRow = JSON.stringify(row.splice(name.length -1)).replace('\[', '').replace('\]', '').replace("\"/", "`");
                                 this.sql.query(
                                     // Insert rows
                                     'INSERT INTO ' + tableName + '(' + selectColumns + ') VALUES(' + row + ')',
@@ -131,8 +134,9 @@ class DatabaseService {
                                     .catch((error) => console.error(error));
                             });
                         })
-                        .catch((error) => console.error(error));
-                }).catch((error => console.error(error)));
+                        .catch((error) => console.error('error: undefined value in the row'));
+                })
+                .catch((error) => console.error(error));
         }
     }
 

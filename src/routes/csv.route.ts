@@ -40,21 +40,22 @@ export class CsvRoute extends BaseRoute {
         // Create the destination folder if not exists
         this.helper.createFolderIfNotExist(res, '../public/uploads/csv');
         // Move the file
-        this.helper.uploadOneFlatFile(req, res);
-
-        let fileName = req.params.filename;
-        if (!fileName) {
-            console.error('Fichier non trouvé');
-            res.status(500).json({ error: 'File not founded' });
-        }
-        // let fileName = 'ASP.L2.CIRCEASP.FINSI.D150108.H223010.TXT';
-        // Flat file case
-        this.helper.getObjectFromFlatFile(fileName, req)
-            .then((content) => {
-                // console.log('End', content);
-                dbManager.createTableFromFile(fileName, content);
-                res.status(200).json({file: content})})
+        this.helper.uploadOneFlatFile(req, res)
+            .then((fileName) => {
+                let mimeType = fileName.split('\.')
+                // Flat file case
+                this.helper.getObjectFromFlatFile(fileName, req)
+                    .then((content) => {
+                        // console.log('End', content);
+                        dbManager.createTableFromFile(fileName, content);
+                        res.status(200).json({file: content})})
+                    .catch((error) => {
+                        console.error('Fichier non trouvé');
+                        res.status(500).json({ error: 'File not founded ' + error.message });
+                    });
+            })
             .catch((error) => res.status(500).json(error));
+
         // res.json(done);
         // return res.json(req.body);
         // Upload file

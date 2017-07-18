@@ -218,27 +218,30 @@ class Utils {
      * @param res
      * @returns {string}
      */
-    uploadOneFlatFile(req: Request, res: Response) {
+    uploadOneFlatFile(req: Request, res: Response): Promise<any> {
         let form = new fileUploader.IncomingForm();
-        return form.parse(req, (err, fields, files) => {
-            if (err) {
-                console.error(err);
-                res.json(err);
-            }
-            let fileName = req.body.filename; // files.file.path.split('\\')[files.file.path.split('\\').length -1];
-            console.log('File uploaded', fileName);
-
-            fs.rename(files.file.path, __dirname + '/../' + this.publicCsvPath + '/' + fileName, (err) => {
+        let promise = new Promise<Array<any>>((resolve: Function, reject: Function) => {
+            // Manage upload
+            form.parse(req, (err, fields, files) => {
                 if (err) {
-                    console.error(err.message);
+                    reject(err);
+                    console.error(err);
                     res.json(err);
                 }
-                // Return the file name
-                return fileName;
-            });
+                let fileName = req.params.filename;
+                resolve(fileName);
+                console.log('File uploaded', fileName);
 
-            return fileName;
+                // Move the file
+                fs.rename(files.file.path, __dirname + '/../' + this.publicCsvPath + '/' + fileName, (err) => {
+                    if (err) {
+                        console.error(err.message);
+                        res.json(err);
+                    }
+                });
+            });
         });
+        return promise;
     }
 
     getObjectFromFlatFile(file: string, req?: Request) {
