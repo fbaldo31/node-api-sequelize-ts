@@ -10,6 +10,7 @@ import * as cluster from 'cluster';
 import * as fileUploader from 'formidable';
 import { Worker } from "cluster";
 import * as csvtojson from 'csvtojson';
+import * as xmlConverter from 'xml2js';
 
 import { CronJobs } from './cron.jobs';
 import { AgentOptions } from './agent.options';
@@ -227,8 +228,7 @@ class Utils {
                     reject(err);
                     console.error(err);
                     res.json(err);
-                }
-                let fileName = req.params.filename;
+                }                let fileName = req.params.filename;
                 resolve(fileName);
                 console.log('File uploaded', fileName);
 
@@ -246,34 +246,6 @@ class Utils {
 
     getObjectFromFlatFile(file: string, req?: Request) {
         let fileLocation: string = __dirname + '/../' + this.publicCsvPath + '/' + file;
-        // console.log('../' + this.publicCsvPath + '/' + file);
-
-        // let fileContent = converter.csv({ path: __dirname + '/../' + this.publicCsvPath + '/' + file }, (data) => {
-        //     console.log('reading file', data);
-        //     return data;
-        // });
-        // console.log('Got content:', fileContent);
-        //
-        // return fileContent;
-
-        // let fileContent = fs.readFileSync(fileLocation);
-
-        // let promise = new Promise<any>((resolve: Function, reject: Function) => {
-        //     flatFile.db({ path: fileLocation }, (data, err) => {
-        //         if (err) {
-        //             console.error(err);
-        //             reject(err);
-        //             return err;
-        //         }
-        //         console.log('got:', data);
-        //         if (req) {
-        //             req.file = data;
-        //         }
-        //         resolve(data);
-        //     }); // .then(data =>  { resolve(data); return data }).catch(error => reject(error));
-        // });
-        //
-        // return promise;
 
         let content = [];
         let promise = new Promise<any>((resolve: Function, reject: Function) => {
@@ -300,6 +272,50 @@ class Utils {
                     resolve(content);
                 })
             });
+        return promise;
+    }
+    getObjectFromCsv(file: string, req?: Request) {
+        let fileLocation: string = __dirname + '/../' + this.publicCsvPath + '/' + file;
+        let promise = new Promise<any>((resolve: Function, reject: Function) => {
+            let fileContent = converter.csv({path: fileLocation}, (data, err) => {
+                if (err) {
+                    reject(err);
+                    console.error(err.message);
+                }
+                // Upload is done
+                // console.log('reading file', data);
+                resolve(data);
+            });
+            console.log('Got content:', fileContent);
+        });
+        return promise;
+    }
+    getObjectFromXml(file: string, req?: Request) {
+        const parseXml = xmlConverter.parseString;
+        let fileLocation: string = path.join(__dirname, '..', this.publicCsvPath, file);
+        let promise = new Promise<any>((resolve: Function, reject: Function) => {
+            let fileContent = fs.readFile(fileLocation, (err: any, data:  any) => {
+                if (err) {
+                    reject(err);
+                    console.error(err.message);
+                }
+                // All is ok
+                console.log('reading file', fileLocation);
+                resolve(data);
+                return data;
+            });
+            return parseXml(fileContent, (err, data) => {
+                if (err) {
+                    reject(err);
+                    console.error(err.message);
+                }
+                // Upload is done
+                console.log('got content', fileContent);
+                resolve(data);
+                return data;
+            });
+            // console.log('Got content:', fileContent);
+        });
         return promise;
     }
 
