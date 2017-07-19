@@ -10,13 +10,13 @@ module.exports = function(grunt) {
         files: [
           {
             expand: true,
-            cwd: "./public",
+            cwd: "./src/public",
             src: ["**"],
             dest: "./dist/public"
           },
           {
             expand: true,
-            cwd: "./views",
+            cwd: "./src/views",
             src: ["**"],
             dest: "./dist/views"
           }

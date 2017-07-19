@@ -36,52 +36,60 @@ export class CsvRoute extends BaseRoute {
             thisRoute.handleUpload(req, res, next);
         });
     }
+
+    /**
+     * Redirect on the correct method to manage file upload depend on mime type
+     * @param {Request} req
+     * @param {Response} res
+     * @param {e.NextFunction} next
+     */
     private handleUpload(req: Request, res: Response, next: NextFunction): void {
         // Create the destination folder if not exists
         this.helper.createFolderIfNotExist(res, '../public/uploads/csv');
         // Move the file
-        this.helper.uploadOneFlatFile(req, res);
-
-        let fileName = req.params.filename;
-        if (!fileName) {
-            console.error('Fichier non trouvé');
-            res.status(500).json({ error: 'File not founded' });
-        }
-        // let fileName = 'ASP.L2.CIRCEASP.FINSI.D150108.H223010.TXT';
-        // Flat file case
-        this.helper.getObjectFromFlatFile(fileName, req)
-            .then((content) => {
-                // console.log('End', content);
-                dbManager.createTableFromFile(fileName, content);
-                res.status(200).json({file: content})})
+        this.helper.uploadOneFlatFile(req, res)
+            .then((fileName) => {
+                let mimeType = fileName.split('\.')[fileName.split('\.').length -1];
+                console.log('Type is', mimeType);
+                switch (mimeType) {
+                    case 'txt': // Flat file case
+                    case 'TXT': this.uploadFlatFile(req, res, fileName);
+                        break;
+                    case 'cvs': // csv file case
+                    case 'CSV': this.uploadCsvFile(req, res, fileName);
+                        break;
+                    case 'xml': // xml file case
+                    case 'XML': this.uploadXmlFile(req, res, fileName);
+                        break;
+                    default: res.status(500).json({ error: 'File not supported'});
+                }
+            })
             .catch((error) => res.status(500).json(error));
-        // res.json(done);
-        // return res.json(req.body);
-        // Upload file
-        // console.log('start upload csv', this.helper.uploadOneCsvFile(req, res, function (uploadError) {
-        //
-        //     if (uploadError) {
-        //         console.error('error', uploadError);
-        //         return res.status(500).json({message: uploadError});
-        //     } else {
-        //         console.log('done', req.file);
-        //         return res.json(req.file);
-        //     }
+    }
 
-        // this.helper.uploadOneCsvFile(req, res, function (uploadError) {
-        //     console.log(req.body);
-        //     if (uploadError) {
-        //         console.error(uploadError);
-        //     }
-        //
-        //     res.json(req.body);
-        //
-        //     let csvFile = req.body;
-        //     // this.fileName = req.body.fileName;
-        //     // this.binary = JSON.stringify(csvFile);
-        //     // this.binary = JSON.parse(this.binary.replace('\\', ''));
-        //     console.log(csvFile);
-        //     // dbManager.registerModels(this.helper.publicCsvPath);
-        // });
+    private uploadFlatFile(req: Request, res: Response, fileName: string) {
+        this.helper.getObjectFromFlatFile(fileName, req)
+            .then((content) => CsvRoute.uploadSuccess(req, res, fileName, content))
+            .catch((error) => CsvRoute.uploadError(req, res, error));
+    }
+    private uploadCsvFile(req: Request, res: Response, fileName: string) {
+        this.helper.getObjectFromCsv(fileName, req)
+            .then((content) => CsvRoute.uploadSuccess(req, res, fileName, content))
+            .catch((error) => CsvRoute.uploadError(req, res, error));
+    }
+    private uploadXmlFile(req: Request, res: Response, fileName: string) {
+        this.helper.getObjectFromXml(fileName, req)
+            .then((content) => CsvRoute.uploadSuccess(req, res, fileName, content))
+            .catch((error) => CsvRoute.uploadError(req, res, error));
+    }
+
+    private static uploadSuccess(req: Request, res: Response, fileName: string, content: any) {
+        console.log('uploded', fileName);
+        dbManager.createTableFromFile(fileName, content);
+        res.status(200).json({file: content});
+    }
+    private static uploadError(req: Request, res: Response, error: any) {
+        console.error('Fichier non trouvé');
+        res.status(500).json({ error: 'File not founded ' + error.message });
     }
 }

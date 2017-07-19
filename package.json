@@ -29,7 +29,8 @@
     "sequelize": "^4.2.0",
     "seriate": "^0.9.0",
     "tedious": "^2.0.0",
-    "util": "^0.10.3"
+    "util": "^0.10.3",
+    "xml2js": "^0.4.17"
   },
   "devDependencies": {
     "@types/body-parser": "0.0.33",
